@@ -1,5 +1,8 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import ModelViewer from "@/components/ModelViewer";
+
+const DEMO_GLB = "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
 
 const MODELS = [
   {
@@ -9,6 +12,7 @@ const MODELS = [
     price: "от 45 000 ₽",
     tag: "Популярное",
     icon: "Cross",
+    src: DEMO_GLB,
   },
   {
     id: 2,
@@ -17,6 +21,7 @@ const MODELS = [
     price: "от 62 000 ₽",
     tag: "Новинка",
     icon: "Columns",
+    src: DEMO_GLB,
   },
   {
     id: 3,
@@ -25,6 +30,7 @@ const MODELS = [
     price: "от 38 000 ₽",
     tag: null,
     icon: "Square",
+    src: null,
   },
   {
     id: 4,
@@ -33,6 +39,7 @@ const MODELS = [
     price: "от 78 000 ₽",
     tag: "Премиум",
     icon: "Landmark",
+    src: DEMO_GLB,
   },
   {
     id: 5,
@@ -41,6 +48,7 @@ const MODELS = [
     price: "от 55 000 ₽",
     tag: null,
     icon: "BookOpen",
+    src: null,
   },
   {
     id: 6,
@@ -49,6 +57,7 @@ const MODELS = [
     price: "от 90 000 ₽",
     tag: "Эксклюзив",
     icon: "Triangle",
+    src: DEMO_GLB,
   },
 ];
 
@@ -183,59 +192,50 @@ export default function Index() {
             {MODELS.map((model) => (
               <div
                 key={model.id}
-                className="card-hover glass rounded-2xl overflow-hidden cursor-pointer group"
-                onClick={() => setActiveModel(model.id === activeModel ? null : model.id)}
+                className="card-hover glass rounded-2xl overflow-hidden group"
               >
-                {/* 3D Preview Placeholder */}
-                <div className="relative h-56 gradient-stone flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 shimmer" />
-                  <div className="relative z-10 flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                      <Icon name={model.icon} fallback="Box" size={28} className="text-primary/70" />
+                {/* 3D Viewer */}
+                <div className="relative">
+                  {model.src ? (
+                    <ModelViewer src={model.src} name={model.name} height="240px" />
+                  ) : (
+                    <div className="relative h-[240px] gradient-stone flex items-center justify-center overflow-hidden">
+                      <div className="absolute inset-0 shimmer" />
+                      <div className="relative z-10 flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                          <Icon name={model.icon} fallback="Box" size={28} className="text-primary/40" />
+                        </div>
+                        <p className="font-body text-xs text-muted-foreground/60">Модель не загружена</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs font-body text-muted-foreground">
-                      <Icon name="RotateCcw" size={12} />
-                      <span>3D модель</span>
-                    </div>
-                  </div>
+                  )}
                   {model.tag && (
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/25 text-primary text-[10px] font-body font-semibold tracking-wide uppercase">
+                    <div className="absolute top-3 right-3 z-10 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/25 text-primary text-[10px] font-body font-semibold tracking-wide uppercase backdrop-blur-sm">
                       {model.tag}
                     </div>
                   )}
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: "radial-gradient(circle at center, rgba(200,160,80,0.08) 0%, transparent 70%)" }}
-                  />
                 </div>
 
                 {/* Info */}
                 <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-display text-xl text-foreground group-hover:text-primary/90 transition-colors">
-                      {model.name}
-                    </h3>
-                  </div>
+                  <h3 className="font-display text-xl text-foreground mb-1">{model.name}</h3>
                   <p className="font-body text-sm text-muted-foreground mb-4">{model.material}</p>
                   <div className="flex items-center justify-between">
                     <span className="font-body text-lg font-semibold text-primary">{model.price}</span>
-                    <button className="flex items-center gap-1.5 text-xs font-body text-muted-foreground hover:text-primary transition-colors">
-                      <Icon name="Eye" size={14} />
-                      Смотреть
+                    <button
+                      onClick={() => setActiveModel(model.id === activeModel ? null : model.id)}
+                      className="flex items-center gap-1.5 text-xs font-body text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Icon name={activeModel === model.id ? "ChevronUp" : "ShoppingBag"} size={14} />
+                      {activeModel === model.id ? "Скрыть" : "Заказать"}
                     </button>
                   </div>
                 </div>
 
-                {/* Expanded */}
+                {/* Expanded order */}
                 {activeModel === model.id && (
                   <div className="px-5 pb-5 border-t border-white/5 pt-4">
-                    <div className="rounded-lg bg-primary/5 border border-primary/10 p-4 text-center">
-                      <Icon name="Box" size={24} className="text-primary/50 mx-auto mb-2" />
-                      <p className="font-body text-xs text-muted-foreground">
-                        3D-просмотр будет доступен после загрузки модели администратором
-                      </p>
-                    </div>
-                    <button className="mt-3 w-full py-2.5 rounded-lg gradient-gold text-background text-sm font-body font-semibold hover:opacity-90 transition-opacity">
+                    <button className="w-full py-2.5 rounded-lg gradient-gold text-background text-sm font-body font-semibold hover:opacity-90 transition-opacity">
                       Заказать консультацию
                     </button>
                   </div>

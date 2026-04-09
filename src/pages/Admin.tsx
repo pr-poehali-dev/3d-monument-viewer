@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import Icon from "@/components/ui/icon";
+import ModelViewer from "@/components/ModelViewer";
 
 interface ModelEntry {
   id: number;
@@ -11,7 +12,10 @@ interface ModelEntry {
   price: string;
   status: "draft" | "published";
   uploadedAt: string;
+  previewUrl: string | null;
 }
+
+const DEMO_GLB = "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
 
 const MOCK_MODELS: ModelEntry[] = [
   {
@@ -24,6 +28,7 @@ const MOCK_MODELS: ModelEntry[] = [
     price: "45000",
     status: "published",
     uploadedAt: "12.03.2024",
+    previewUrl: DEMO_GLB,
   },
   {
     id: 2,
@@ -35,6 +40,7 @@ const MOCK_MODELS: ModelEntry[] = [
     price: "62000",
     status: "published",
     uploadedAt: "15.03.2024",
+    previewUrl: DEMO_GLB,
   },
   {
     id: 3,
@@ -46,6 +52,7 @@ const MOCK_MODELS: ModelEntry[] = [
     price: "90000",
     status: "draft",
     uploadedAt: "18.03.2024",
+    previewUrl: null,
   },
 ];
 
@@ -57,6 +64,7 @@ export default function Admin() {
   const [newFile, setNewFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [previewModel, setPreviewModel] = useState<ModelEntry | null>(null);
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -74,6 +82,7 @@ export default function Admin() {
 
   const handleAddModel = () => {
     if (!newModel.name) return;
+    const objectUrl = newFile ? URL.createObjectURL(newFile) : null;
     const entry: ModelEntry = {
       id: Date.now(),
       name: newModel.name,
@@ -84,6 +93,7 @@ export default function Admin() {
       price: newModel.price,
       status: "draft",
       uploadedAt: new Date().toLocaleDateString("ru-RU"),
+      previewUrl: objectUrl,
     };
     setModels((prev) => [entry, ...prev]);
     setNewModel({ name: "", material: "", price: "" });
@@ -172,10 +182,18 @@ export default function Admin() {
             <div className="divide-y divide-white/5">
               {models.map((model) => (
                 <div key={model.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors group">
-                  {/* Icon */}
-                  <div className="w-10 h-10 rounded-lg bg-card border border-white/5 flex items-center justify-center shrink-0">
-                    <Icon name="Box" size={18} className="text-primary/60" />
-                  </div>
+                  {/* Preview button */}
+                  <button
+                    onClick={() => model.previewUrl && setPreviewModel(model)}
+                    className={`w-10 h-10 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                      model.previewUrl
+                        ? "bg-primary/10 border-primary/20 hover:bg-primary/20 cursor-pointer"
+                        : "bg-card border-white/5 cursor-default"
+                    }`}
+                    title={model.previewUrl ? "Просмотреть 3D" : "Модель не загружена"}
+                  >
+                    <Icon name={model.previewUrl ? "Eye" : "Box"} size={16} className={model.previewUrl ? "text-primary" : "text-primary/30"} />
+                  </button>
 
                   {/* Name & file */}
                   <div className="flex-1 min-w-0">
@@ -370,6 +388,28 @@ export default function Admin() {
                 Добавить
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3D Preview Modal */}
+      {previewModel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setPreviewModel(null)} />
+          <div className="relative z-10 w-full max-w-2xl glass rounded-2xl border border-white/10 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+              <div>
+                <h3 className="font-display text-xl text-foreground">{previewModel.name}</h3>
+                <p className="font-body text-xs text-muted-foreground mt-0.5">{previewModel.material} · {previewModel.fileName}</p>
+              </div>
+              <button
+                onClick={() => setPreviewModel(null)}
+                className="p-1.5 rounded-lg hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Icon name="X" size={18} />
+              </button>
+            </div>
+            <ModelViewer src={previewModel.previewUrl} name={previewModel.name} height="420px" />
           </div>
         </div>
       )}
